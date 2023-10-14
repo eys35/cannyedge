@@ -14,27 +14,9 @@ def convert_to_grayscale(image_path, output_path):
     
     output_image.save(output_path)
 
-# def apply_gaussian_filter(image_path, output_path):
-#     original_image = Image.open(image_path).convert("L")
-#     grayscale_array = np.array(original_image)
-    
-#     kernel = np.array([[1, 2, 1],
-#                        [2, 4, 2],
-#                        [1, 2, 1]])
-    
-#     kernel = kernel / np.sum(kernel)
-    
-#     filtered_array = np.zeros_like(grayscale_array, dtype=np.float64)
-    
-#     filtered_array = np.convolve(grayscale_array, kernel, mode='same')
-#     filtered_array = np.reshape(filtered_array, grayscale_array.shape)
-    
-#     filtered_image = Image.fromarray(filtered_array.astype(np.uint8))
-#     filtered_image.save(output_path)
-
 def apply_gaussian_filter(image_path, output_path):
-    original_image = Image.open(image_path).convert("L")
-    grayscale_array = np.array(original_image)
+    image = Image.open(image_path).convert("L")
+    grayscale_array = np.array(image)
 
     kernel = np.array([[1, 2, 1],
                        [2, 4, 2],
@@ -51,6 +33,26 @@ def apply_gaussian_filter(image_path, output_path):
     filtered_image = Image.fromarray(filtered_array.astype(np.uint8))
     filtered_image.save(output_path)
 
+def gradient_calculation(image_path):
+    image = Image.open(image_path).convert("L")
+    filtered_image = np.array(image)
+
+    Kx = np.array([[1, 0, -1],
+                   [2, 0, -2],
+                   [1, 0, -1]])
+    
+    Ky = np.array([[ 1,  2,  1],
+                   [ 0,  0,  0],
+                   [-1, -2, -1]])
+    
+    Gx = np.convolve(filtered_image, Kx, mode='same')
+    Gy = np.convolve(filtered_image, Ky, mode='same')
+
+    G = np.hypot(Gx, Gy)
+    G = G / G.max() * 255
+    theta = np.arctan2(Gx, Gy)
+    
+    return G, theta
 
 
 input_image_path = "emma.png" 
@@ -58,3 +60,4 @@ output_image_path = "greyscale.png"  # output path
 gaussian_path = "gaussian output.png"  # output path
 convert_to_grayscale(input_image_path, output_image_path)
 apply_gaussian_filter(output_image_path, gaussian_path)
+print(gradient_calculation(gaussian_path))
