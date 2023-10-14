@@ -35,7 +35,7 @@ def apply_gaussian_filter(image_path, output_path):
 
 def gradient_calculation(image_path):
     image = Image.open(image_path).convert("L")
-    filtered_image = np.array(image)
+    filtered_array = np.array(image)
 
     Kx = np.array([[1, 0, -1],
                    [2, 0, -2],
@@ -44,9 +44,13 @@ def gradient_calculation(image_path):
     Ky = np.array([[ 1,  2,  1],
                    [ 0,  0,  0],
                    [-1, -2, -1]])
-    
-    Gx = np.convolve(filtered_image, Kx, mode='same')
-    Gy = np.convolve(filtered_image, Ky, mode='same')
+    rows, cols = filtered_array.shape
+    Gx = np.zeros((rows, cols))
+    Gy = np.zeros((rows, cols))
+    for i in range(1, rows - 1):
+        for j in range(1, cols - 1):
+            Gx[i, j] = np.sum(filtered_array[i-1:i+2, j-1:j+2] * Kx)
+            Gy[i, j] = np.sum(filtered_array[i-1:i+2, j-1:j+2] * Ky)
 
     G = np.hypot(Gx, Gy)
     G = G / G.max() * 255
