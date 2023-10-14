@@ -33,7 +33,7 @@ def apply_gaussian_filter(image_path, output_path):
     filtered_image = Image.fromarray(filtered_array.astype(np.uint8))
     filtered_image.save(output_path)
 
-def gradient_calculation(image_path):
+def gradient_calculation(image_path, output_path):
     image = Image.open(image_path).convert("L")
     filtered_array = np.array(image)
 
@@ -56,12 +56,16 @@ def gradient_calculation(image_path):
     G = G / G.max() * 255
     theta = np.arctan2(Gx, Gy)
     
+    gradient_image = Image.fromarray(G.astype(np.uint8))
+    gradient_image.save(output_path)
     return G, theta
 
 
 input_image_path = "emma.png" 
 output_image_path = "greyscale.png"  # output path
 gaussian_path = "gaussian output.png"  # output path
+gradient_path = "gradient.png" # output path
 convert_to_grayscale(input_image_path, output_image_path)
 apply_gaussian_filter(output_image_path, gaussian_path)
-print(gradient_calculation(gaussian_path))
+mag, dir = gradient_calculation(gaussian_path, gradient_path)
+print(dir)
