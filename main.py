@@ -60,12 +60,86 @@ def gradient_calculation(image_path, output_path):
     gradient_image.save(output_path)
     return G, theta
 
+def non_max_suppression(gradient_magnitude, gradient_direction, output_path):
+    image_row, image_col = gradient_magnitude.shape
+    output = np.zeros(gradient_magnitude.shape)
+    PI = 180
+
+    for row in range(1, image_row - 1):
+        for col in range(1, image_col - 1):
+            direction = gradient_direction[row, col]
+ 
+            if (0 <= direction < PI / 8) or (15 * PI / 8 <= direction <= 2 * PI):
+                before_pixel = gradient_magnitude[row, col - 1]
+                after_pixel = gradient_magnitude[row, col + 1]
+ 
+            elif (PI / 8 <= direction < 3 * PI / 8) or (9 * PI / 8 <= direction < 11 * PI / 8):
+                before_pixel = gradient_magnitude[row + 1, col - 1]
+                after_pixel = gradient_magnitude[row - 1, col + 1]
+ 
+            elif (3 * PI / 8 <= direction < 5 * PI / 8) or (11 * PI / 8 <= direction < 13 * PI / 8):
+                efore_pixel = gradient_magnitude[row - 1, col]
+                after_pixel = gradient_magnitude[row + 1, col]
+ 
+            else:
+                before_pixel = gradient_magnitude[row - 1, col - 1]
+                after_pixel = gradient_magnitude[row + 1, col + 1]
+ 
+            if gradient_magnitude[row, col] >= before_pixel and gradient_magnitude[row, col] >= after_pixel:
+                output[row, col] = gradient_magnitude[row, col]
+    non_max_supp_image = Image.fromarray(output.astype(np.uint8))
+    non_max_supp_image.save(output_path)
+    return output
+
+def double_thresholding(img,lowThresholdRatio=0.05, highThresholdRatio=0.09):
+        M, N = img.shape
+
+        highThreshold = img.max() * highThresholdRatio
+        lowThreshold = highThreshold * lowThresholdRatio
+
+        res = np.zeros((M,N), dtype=np.int32)
+        weak = np.int32(25)
+        strong = np.int32(255)
+
+        strong_i, strong_j = np.where(img >= highThreshold)
+        zeros_i, zeros_j = np.where(img < lowThreshold)
+
+        weak_i, weak_j = np.where((img <= highThreshold) & (img >= lowThreshold))
+    
+        res[strong_i, strong_j] = strong
+        res[weak_i, weak_j] = weak
+    
+        return (res, weak, strong)
+
+def hysteresis(output_path, img, weak, strong=255):
+        M, N = img.shape
+        for i in range(1, M-1):
+            for j in range(1, N-1):
+                if (img[i,j] == weak):
+                    try:
+                        if ((img[i+1, j-1] == strong) or (img[i+1, j] == strong) or (img[i+1, j+1] == strong)
+                            or (img[i, j-1] == strong) or (img[i, j+1] == strong)
+                            or (img[i-1, j-1] == strong) or (img[i-1, j] == strong) or (img[i-1, j+1] == strong)):
+                            img[i, j] = strong
+                        else:
+                            img[i, j] = 0
+                    except IndexError as e:
+                        pass
+        hysteresis_img = Image.fromarray(img.astype(np.uint8))
+        hysteresis_img.save(output_path)
+        return img
 
 input_image_path = "emma.png" 
 output_image_path = "greyscale.png"  # output path
 gaussian_path = "gaussian output.png"  # output path
 gradient_path = "gradient.png" # output path
+non_max_path = "non_max_supp.png" # output path
+hysteresis_path= "hysteresis.png"
+
 convert_to_grayscale(input_image_path, output_image_path)
 apply_gaussian_filter(output_image_path, gaussian_path)
 mag, dir = gradient_calculation(gaussian_path, gradient_path)
+z = non_max_suppression(mag, dir, non_max_path)
+res, weak, strong = double_thresholding(z)
+hysteresis(hysteresis_path, res, weak, strong)
 print(dir)
