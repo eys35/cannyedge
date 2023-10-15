@@ -1,5 +1,15 @@
 import numpy as np
 from PIL import Image, ImageDraw
+import matplotlib as plt
+from matplotlib.image import imread
+
+# input_image_path = "emma.png" 
+input_image_path = input("Please enter something: ")
+output_image_path = "greyscale.png"  # output path
+gaussian_path = "gaussian output.png"  # output path
+gradient_path = "gradient.png" # output path
+non_max_path = "non_max_supp.png" # output path
+hysteresis_path= "hysteresis.png"
 
 # Test
 print(np.random.randint(0, 100))
@@ -129,12 +139,6 @@ def hysteresis(output_path, img, weak, strong=255):
         hysteresis_img.save(output_path)
         return img
 
-input_image_path = "emma.png" 
-output_image_path = "greyscale.png"  # output path
-gaussian_path = "gaussian output.png"  # output path
-gradient_path = "gradient.png" # output path
-non_max_path = "non_max_supp.png" # output path
-hysteresis_path= "hysteresis.png"
 
 convert_to_grayscale(input_image_path, output_image_path)
 apply_gaussian_filter(output_image_path, gaussian_path)
@@ -142,4 +146,11 @@ mag, dir = gradient_calculation(gaussian_path, gradient_path)
 z = non_max_suppression(mag, dir, non_max_path)
 res, weak, strong = double_thresholding(z)
 hysteresis(hysteresis_path, res, weak, strong)
-print(dir)
+
+import time
+
+time.sleep(7)
+before = imread(input_image_path)
+plt.imshow(before)
+after = imread(hysteresis_path)
+plt.imshow(after)
