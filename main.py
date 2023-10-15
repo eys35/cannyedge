@@ -1,8 +1,7 @@
 import numpy as np
 from PIL import Image, ImageDraw
-import matplotlib as plt
+import matplotlib.pyplot as plt
 from matplotlib.image import imread
-
 # input_image_path = "emma.png" 
 input_image_path = input("Please enter something: ")
 output_image_path = "greyscale.png"  # output path
@@ -23,6 +22,7 @@ def convert_to_grayscale(image_path, output_path):
     output_image = Image.fromarray(grayscale_array)
     
     output_image.save(output_path)
+    return original_image
 
 def apply_gaussian_filter(image_path, output_path):
     image = Image.open(image_path).convert("L")
@@ -39,7 +39,7 @@ def apply_gaussian_filter(image_path, output_path):
     for i in range(1, grayscale_array.shape[0] - 1):
         for j in range(1, grayscale_array.shape[1] - 1):
             filtered_array[i, j] = np.sum(grayscale_array[i-1:i+2, j-1:j+2] * kernel)
-
+    
     filtered_image = Image.fromarray(filtered_array.astype(np.uint8))
     filtered_image.save(output_path)
 
@@ -137,7 +137,8 @@ def hysteresis(output_path, img, weak, strong=255):
                         pass
         hysteresis_img = Image.fromarray(img.astype(np.uint8))
         hysteresis_img.save(output_path)
-        return img
+        plt.imshow(hysteresis_img)
+        return hysteresis_img
 
 
 convert_to_grayscale(input_image_path, output_image_path)
@@ -145,12 +146,15 @@ apply_gaussian_filter(output_image_path, gaussian_path)
 mag, dir = gradient_calculation(gaussian_path, gradient_path)
 z = non_max_suppression(mag, dir, non_max_path)
 res, weak, strong = double_thresholding(z)
+
 hysteresis(hysteresis_path, res, weak, strong)
-
-import time
-
-time.sleep(7)
 before = imread(input_image_path)
 plt.imshow(before)
+plt.axis('off')
+plt.title("Before")
+plt.show()
 after = imread(hysteresis_path)
-plt.imshow(after)
+plt.imshow(after, cmap='gray')
+plt.axis('off')
+plt.title("After")
+plt.show()
